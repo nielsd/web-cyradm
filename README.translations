@@ -22,7 +22,7 @@ msgfmt -o blah.mo blah.po
 
 When you submit your new translation, please let me know what the correct Characterset is (e.g. ISO-8859-1 for Western Europe)
 
-If you need some help, subscribe to the mailinglist http://www.web-cyradm.org/mailman/listinfo/web-cyradm
+If you need some help, star + follow https://github.com/nielsd/web-cyradm
 
 Thanks
 
