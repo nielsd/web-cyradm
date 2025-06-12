@@ -26,6 +26,11 @@ cd /srv/www/htdocs/web-cyradm/config
 vi conf.php.dist
 mv conf.php.dist conf.php
 ```
+Initial web credentials:
+```
+user: admin
+password: password
+```
 
 ### PAM config
 Depending from your OS, you have to change some or all of this files:
