@@ -113,8 +113,8 @@ CREATE TABLE log (
   PRIMARY KEY  (id)
 ) TYPE=MyISAM;
 
-INSERT INTO adminuser (username, password) VALUES ('admin', ENCRYPT('X-fr4ckL0rd'));
+INSERT INTO adminuser (username, password) VALUES ('admin', ENCRYPT('password));
 INSERT INTO domainadmin (domain_name,adminuser) VALUES ('*','admin');
-INSERT INTO accountuser (username, password) VALUES ('cyrus', ENCRYPT('X-fr1ckL0rd'));
+INSERT INTO accountuser (username, password) VALUES ('cyrus', ENCRYPT('password'));
 
 
