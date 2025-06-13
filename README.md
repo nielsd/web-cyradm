@@ -71,8 +71,78 @@ You may test the authentication now per testsaslauthd command.
 [under work]
 mysql functionality must be compiled in / enabled
 use saslauthd authenticators
-config MySQL routers
+config MySQL routing
+
+
+in exim.conf
+
+```
 ...
+## MySQL defines
+MYSQL_SERVER=localhost
+MYSQL_USER=mail
+MYSQL_PASSWORD=MYSQLPASSWORD
+MYSQL_DB=mail
+MYSQL_ACCOUNTS=accountuser
+MYSQL_DOMAINTABLE=domain
+MYSQL_ALIASES=`virtual`
+
+# MySQL connection
+hide mysql_servers = "MYSQL_SERVER/MYSQL_DB/MYSQL_USER/MYSQL_PASSWORD"
+
+# MySQL queries
+MYSQL_Q_FORWARD=SELECT forward FROM MYSQL_EMAILTABLE WHERE domain='${quote_mysql:$domain}' AND local_part='${quote_mysql:$local_part}' AND forward != ''
+MYSQL_Q_LOCAL=SELECT domain FROM MYSQL_EMAILTABLE WHERE domain='${quote_mysql:$domain}' AND local_part='${quote_mysql:$local_part}'
+MYSQL_Q_WCLOCAL=SELECT domain FROM MYSQL_EMAILTABLE WHERE domain='${quote_mysql:$domain}' AND local_part='*' AND forward != ''
+MYSQL_Q_WCLOCFW=SELECT forward FROM MYSQL_EMAILTABLE WHERE domain='${quote_mysql:$domain}' AND local_part='*' AND forward != ''
+MYSQL_Q_LDOMAIN=SELECT DISTINCT domain FROM MYSQL_DOMAINTABLE WHERE domain='$domain'
+MYSQL_Q_RDOMAIN=SELECT DISTINCT domain FROM MYSQL_DOMAINRTABLE WHERE domain='$domain'
+MYSQL_Q_DISABLED=SELECT domain FROM MYSQL_EMAILTABLE WHERE domain='${quote_mysql:$domain}' AND local_part='${quote_mysql:$local_part}' AND is_enabled='no'
+MYSQL_Q_AUTHPWD2=SELECT boxname FROM MYSQL_AUTHTABLE WHERE boxname='$1' AND boxpwd=encrypt('$2',boxpwd)
+
+MYSQL_CYRUS_ALIASES=SELECT dest FROM MYSQL_ALIASES WHERE alias='${quote_mysql:${expand:${local_part}@${domain}}}'
+
+domainlist cyradm_domains = mysql;select distinct * from domain where domain_name = '${quote_mysql:$domain}';
+
+MYSQL_DOMAIN=SELECT DISTINCT domain_name FROM MYSQL_DOMAINTABLE WHERE domain_name='${quote_mysql:$domain}'
+MYSQL_LOCAL_DEST=SELECT dest FROM MYSQL_ALIASES WHERE alias='${quote_mysql:$local_part@$domain}' OR alias='${quote_mysql:$local_part}'
+
+...
+
+begin routers
+...
+        mysql_aliases:
+                driver          = redirect
+                allow_fail
+                allow_defer
+                data            = ${lookup mysql {MYSQL_LOCAL_DEST}{$value}}
+                user            = mail
+                file_transport  = address_file
+                pipe_transport  = address_pipe
+                local_part_suffix = +*
+                local_part_suffix_optional
+...
+
+begin authenticators
+...
+plain:
+                driver          = plaintext
+                public_name     = PLAIN
+                server_prompts  = :
+                server_set_id   = $2
+                server_condition = ${if saslauthd{{$2}{$3}{smtp}}{1}{0}}
+                server_advertise_condition = true
+
+login:
+                driver          = plaintext
+                public_name     = LOGIN
+                server_prompts  = "Username:: : Password::"
+                server_condition = ${if saslauthd{{$1}{$2}{smtp}}{1}{0}}
+                server_set_id   = $1
+                server_advertise_condition = true
+...
+
+```
 
 ### configure SMTP in Postfix
 [under work]
@@ -89,3 +159,4 @@ config MySQL routers
 * http://www.web-cyradm.org/ - former project website (obsolete)
 * https://tldp.org/HOWTO/html_single/Postfix-Cyrus-Web-cyradm-HOWTO/ - installation for cyrus-imap + postfix
 * https://dokuwiki.nausch.org/doku.php/centos:mail_c6:web-cyradm - [german] installation 
+
